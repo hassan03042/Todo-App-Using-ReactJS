@@ -1,10 +1,12 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import "./App.css";
 import TodoInput from "./components/TodoInput";
 import TodoList from "./components/TodoList";
+import FilterButtons from "./components/FilterButtons";
 
 function App() {
   const [todo, setTodo] = useState("");
+  const [filter, setFilter] = useState("All");
   const [todos, setTodos] = useState([
     {
       todo: "Reading Book",
@@ -27,11 +29,40 @@ function App() {
     setTodo("");
   }, [todo]);
 
-  const handleOnDelete = useCallback((id) => {
-    const filter = todos.filter((data) => data.id !== id);
-    setTodos([...filter])
-    
-  }, [todos]);
+  const handleOnDelete = useCallback(
+    (id) => {
+      const filter = todos.filter((data) => data.id !== id);
+      setTodos([...filter]);
+    },
+    [todos]
+  );
+
+  const handleOnToggleTodo = useCallback(
+    (id) => {
+      console.log("id on clicking todo", id);
+      const todosArr = [...todos];
+      const todoInd = todosArr.findIndex((data) => data.id == id);
+      todosArr[todoInd].completed = !todosArr[todoInd].completed;
+      setTodos([...todosArr]);
+    },
+    [todos]
+  );
+
+  const filteredTodos = useMemo(
+    () =>
+      todos.filter((data) => {
+        if (filter == "All") {
+          return true;
+        }
+        if (filter == "Completed" && data.completed) {
+          return true;
+        }
+        if (filter == "Uncompleted" && !data.completed) {
+          return true;
+        }
+      }),
+    [filter, todos]
+  );
 
   return (
     <div className="w-3/4 mx-auto">
@@ -43,9 +74,13 @@ function App() {
         onClick={handleAddTodo}
       />
 
+      <FilterButtons filter={filter} setFilter={setFilter} />
+
       <TodoList
-      toggleTodo={handleOnDelete}
-      todos={todos} onDelete={handleOnDelete} />
+        toggleTodo={handleOnToggleTodo}
+        todos={filteredTodos}
+        onDelete={handleOnDelete}
+      />
     </div>
   );
 }
